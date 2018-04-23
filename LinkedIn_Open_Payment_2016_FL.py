@@ -15,14 +15,17 @@ pysqldf = lambda q: sqldf(q, globals())
 #Please create a CMS account at https://data.cms.gov/ and obtain app_token here https://dev.socrata.com/docs/app-tokens.html.
 
 # Web API's URL endpoint.
-baseUrl = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$$app_token=Sl6J3DIYj30hXGdoVuLOEday5"
+baseUrl = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$$" +\
+"app_token=Your App Token"
 
-# Web API's URL endpoint for the query "SELECT COUNT(*) WHERE recipient_state = "FL", to count the total row 
+# Web API's URL endpoint for the query "SELECT COUNT(*) WHERE recipient_state = "FL"
+# to count the total row 
 url = baseUrl + "&$query=SELECT%20COUNT(*)%20WHERE%20recipient_state%20=%22FL%22"
 
 #The actual columns from the JSON were selected in query parameters
-o_url = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$query=SELECT%20recipient_state%2crecipient_zip_code%2ctotal_amount_of_payment_usdollars%20WHERE%20recipient_state%20=%22FL%22"
-#print(o_url)
+o_url = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$" + \
+"query=SELECT%20recipient_state%2crecipient_zip_code" +\
+"%2ctotal_amount_of_payment_usdollars%20WHERE%20recipient_state%20=%22FL%22"
 
 # Send an HTTP GET request to the URL endpoint.
 response = requests.get(url)
@@ -38,7 +41,6 @@ print("Count: " + str(count))
 
 # Create a data frame.
 dataFrames = pd.DataFrame()
-
 
 # Set a limit off 2000 rows per request.
 limit = 2000
@@ -70,37 +72,30 @@ print("Number of rows in final data frame: " + str(len(dataFrames)))
 
 dataFrames.recipient_zip_code = dataFrames.recipient_zip_code.str[:5]  #Get rid of the extra 4 digits in the end
 
-dataFrames.to_csv('C:\\Users\\mo.villagran\\Desktop\\Python_API_JSON\\FL_out.csv', sep=',')
+dataFrames.to_csv('Your Directory\\FL_out.csv', sep=',')
 
 dataFrames.info()
 
 
 #Load CVS FL 2016 Open Payment data
-
-FL_df = pd.read_csv('C:\\Users\\mo.villagran\\Desktop\\Python_API_JSON\\FL_out.csv')
-
+FL_df = pd.read_csv('Your Directory\\FL_out.csv')
 FL_df.info()
 FL_df['recipient_zip_code'] = FL_df.recipient_zip_code.astype(str)
 FL_df.recipient_zip_code = FL_df.recipient_zip_code.str[:5]  #Get rid of the extra 4 digits in the end
 
-
 #Load zip code file
-
-zip_df = pd.read_excel('C:\\Users\\mo.villagran\\Desktop\\Python_API_JSON\\Zipcode_table.xlsx',sheet_name='Main')
+zip_df = pd.read_excel('Your Directory\\Zipcode_table.xlsx',sheet_name='Main')
 zip_df['FIPS'] = zip_df.FIPS.astype(str)
-
 
 #join CMS 2016 open payment FL with Zipcode_table to obtain FIPS here
-
 pdsql = PandaSQL()
 zip_df['FIPS'] = zip_df.FIPS.astype(str)
-joined_df = pdsql("Select a.recipient_zip_code, a.total_amount_of_payment_usdollars, b.State, b.County, b.FIPS from FL_df a left join zip_df b on a.recipient_zip_code = b.ZipCode and a.recipient_state = b.State" )
-
+joined_df = pdsql("Select a.recipient_zip_code, a.total_amount_of_payment_usdollars, b.State, b.County, b.FIPS" +\ 
+"from FL_df a left join zip_df b on a.recipient_zip_code = b.ZipCode and a.recipient_state = b.State" )
 joined_df['total_amount_of_payment_usdollarsz'] = joined_df.total_amount_of_payment_usdollars.astype(float)
 
 #Clean up data due to duplicates, nulls, etc.
 joined_df = joined_df.drop_duplicates(subset=None, keep="first", inplace=False)
-
 df = joined_df.fillna(0)
 df= joined_df.round(0)
 
@@ -116,12 +111,9 @@ df = df.reset_index()
 
 #Clean up data again due to duplicates, nulls, etc.
 trash = ['0','None', 0]
-	
 df_final =  df[~df.FIPS.isin(trash)]
 
-print(df_final)
-
-df_final.to_csv('C:\\Users\\mo.villagran\\Desktop\\Python_API_JSON\\Combo_FL_out.csv', sep=',')
+df_final.to_csv('Your Directory\\Combo_FL_out.csv', sep=',')
 
 
 #~~~~~~visualization using plotly~~~~~~~~
@@ -138,12 +130,11 @@ import numpy as np
 import pandas as pd
 
 
-#You can read in the dataframes from above but it's easier to modify Plotly graph this way
+#You can read in the dataframes from above 
+#but it's easier to modify Plotly graph when you have CSV files downloaded
 #so you don't have to rerun the whole program from the top.
 
-
-df_sample = pd.read_csv('C:\\Users\\mo.villagran\\Desktop\\Python_API_JSON\\Combo_FL_out.csv')
-
+df_sample = pd.read_csv('Your Directory\\Combo_FL_out.csv')
 Total_Payment = df_sample['Total_Payment'].tolist()
 fips = df_sample['FIPS'].tolist()
 
@@ -152,7 +143,6 @@ endpts = [2000000,4000000,6000000,8000000,10000000,12000000,14000000,16000000]
 
 #I used this website here: http://www.perbang.dk/rgbgradient/
 #To create my own gradient
-
 colorscale = [
     "#99DEE5",
     "#00E096",
@@ -164,7 +154,6 @@ colorscale = [
 	"#C3006E",
 	"#BF002C"
 ]
-
 fig = ff.create_choropleth(
     fips=fips, values=Total_Payment, scope=['Florida'], show_state_data=True,
     colorscale=colorscale, binning_endpoints=endpts, round_legend_values=True,
@@ -172,7 +161,8 @@ fig = ff.create_choropleth(
     paper_bgcolor='rgb(229,229,229)',
     legend_title='Open Payment by County',
     county_outline={'color': 'rgb(255,255,255)', 'width': 0.5}
-
 )
 #You can do the online version but the offline graph is faster.
 plotly.offline.plot(fig, filename='US_Open_Payment_FL_2016.html')
+
+
