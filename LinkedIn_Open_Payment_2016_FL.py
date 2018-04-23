@@ -53,7 +53,6 @@ print("Count: " + str(count))
 
 # Create a data frame.
 dataFrames = pd.DataFrame()
-
 # Set a limit off 2000 rows per request.
 limit = 2000
 
@@ -67,7 +66,6 @@ for offset in range(0, count, limit):
 	
 	# Convert  the response to json format.
 	json = response.json()
-	
 	# Print the response to the console.
 	print(json)
 	
