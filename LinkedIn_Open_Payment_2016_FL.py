@@ -1,28 +1,38 @@
 import pandas as pd
 import numpy as np
+
 import requests
 import json
+
 from pandas import ExcelWriter
 from pandas import ExcelFile
-from pandasql import sqldf, PandaSQL
 
+from pandasql import sqldf, PandaSQL
 pysqldf = lambda q: sqldf(q, globals())
 
-#Link to the 2016 Open Payment data: https://openpaymentsdata.cms.gov/dataset/General-Payment-Data-Detailed-Dataset-2016-Reporti/3cy7-uu8k
+import plotly
+plotly.tools.set_credentials_file(username='Your User Name', api_key='Your Api Key')
+import plotly.plotly as py
+import plotly.figure_factory as ff
 
-#2016 Open Payment data API documentation: https://dev.socrata.com/foundry/openpaymentsdata.cms.gov/qh6m-nw4f
+# Link to the 2016 Open Payment data:
+# https://openpaymentsdata.cms.gov/dataset/General-Payment-Data-Detailed-Dataset-2016-Reporti/3cy7-uu8k
 
-#Please create a CMS account at https://data.cms.gov/ and obtain app_token here https://dev.socrata.com/docs/app-tokens.html.
+# 2016 Open Payment data API documentation:
+# https://dev.socrata.com/foundry/openpaymentsdata.cms.gov/qh6m-nw4f
+
+# Please create a CMS account at https://data.cms.gov/
+# Obtain app_token here https://dev.socrata.com/docs/app-tokens.html
 
 # Web API's URL endpoint.
-baseUrl = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$$" +\
-"app_token=Your App Token"
+baseUrl = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?" +\
+"$$app_token=Your App Token"
 
 # Web API's URL endpoint for the query "SELECT COUNT(*) WHERE recipient_state = "FL"
-# to count the total row 
+# Count the total row 
 url = baseUrl + "&$query=SELECT%20COUNT(*)%20WHERE%20recipient_state%20=%22FL%22"
 
-#The actual columns from the JSON were selected in query parameters
+# The actual columns from the JSON were selected in query parameters
 o_url = "https://openpaymentsdata.cms.gov/resource/qh6m-nw4f.json?$" + \
 "query=SELECT%20recipient_state%2crecipient_zip_code" +\
 "%2ctotal_amount_of_payment_usdollars%20WHERE%20recipient_state%20=%22FL%22"
@@ -77,14 +87,14 @@ dataFrames.to_csv('Your Directory\\FL_out.csv', sep=',')
 dataFrames.info()
 
 
-#Load CVS FL 2016 Open Payment data
+#Load CSV FL 2016 Open Payment data
 FL_df = pd.read_csv('Your Directory\\FL_out.csv')
 FL_df.info()
 FL_df['recipient_zip_code'] = FL_df.recipient_zip_code.astype(str)
 FL_df.recipient_zip_code = FL_df.recipient_zip_code.str[:5]  #Get rid of the extra 4 digits in the end
 
 #Load zip code file
-zip_df = pd.read_excel('Your Directory\\Zipcode_table.xlsx',sheet_name='Main')
+zip_df = pd.read_excel('Your Directory\\Zipcode_table.xlsx',sheet_name='Main') #zip code  table is in the folder here in Github.
 zip_df['FIPS'] = zip_df.FIPS.astype(str)
 
 #join CMS 2016 open payment FL with Zipcode_table to obtain FIPS here
@@ -116,33 +126,24 @@ df_final =  df[~df.FIPS.isin(trash)]
 df_final.to_csv('Your Directory\\Combo_FL_out.csv', sep=',')
 
 
-#~~~~~~visualization using plotly~~~~~~~~
+#~~~~~~Makine a Choropleth Map using Plotly~~~~~~~~
 
-# You will also need to register for an account on plotly here: https://plot.ly/ (It's free to get an account.)
+# You will also need to register for an account on plotly here:
+# https://plot.ly/ (It's free to get an account.)
 
-import plotly
-plotly.tools.set_credentials_file(username='Your User Name', api_key='Your Api Key')
-
-import plotly.plotly as py
-import plotly.figure_factory as ff
-
-import numpy as np
-import pandas as pd
-
-
-#You can read in the dataframes from above 
-#but it's easier to modify Plotly graph when you have CSV files downloaded
-#so you don't have to rerun the whole program from the top.
+# You can read in the dataframes from above without the program,
+# but it's easier to modify Plotly graph when you have CSV files downloaded
+# so you don't have to rerun the whole program from the top.
 
 df_sample = pd.read_csv('Your Directory\\Combo_FL_out.csv')
 Total_Payment = df_sample['Total_Payment'].tolist()
 fips = df_sample['FIPS'].tolist()
 
-#These end points need to be estimated according to the data. 
+# These end points need to be estimated according to the data. 
 endpts = [2000000,4000000,6000000,8000000,10000000,12000000,14000000,16000000]
 
-#I used this website here: http://www.perbang.dk/rgbgradient/
-#To create my own gradient
+# I used this website here: http://www.perbang.dk/rgbgradient/
+# To create my own gradient
 colorscale = [
     "#99DEE5",
     "#00E096",
@@ -154,6 +155,7 @@ colorscale = [
 	"#C3006E",
 	"#BF002C"
 ]
+
 fig = ff.create_choropleth(
     fips=fips, values=Total_Payment, scope=['Florida'], show_state_data=True,
     colorscale=colorscale, binning_endpoints=endpts, round_legend_values=True,
@@ -162,7 +164,8 @@ fig = ff.create_choropleth(
     legend_title='Open Payment by County',
     county_outline={'color': 'rgb(255,255,255)', 'width': 0.5}
 )
-#You can do the online version but the offline graph is faster.
+
+# You can do the online version but the offline graph is faster.
 plotly.offline.plot(fig, filename='US_Open_Payment_FL_2016.html')
 
 
