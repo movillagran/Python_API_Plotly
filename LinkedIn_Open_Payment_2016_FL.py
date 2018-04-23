@@ -121,7 +121,7 @@ df_final.to_csv('Your Directory\\Combo_FL_out.csv', sep=',')
 # You will also need to register for an account on plotly here: https://plot.ly/ (It's free to get an account.)
 
 import plotly
-plotly.tools.set_credentials_file(username='mo.villagran', api_key='4MpuZPkRTuRdfRLqcp3a')
+plotly.tools.set_credentials_file(username='Your User Name', api_key='Your Api Key')
 
 import plotly.plotly as py
 import plotly.figure_factory as ff
