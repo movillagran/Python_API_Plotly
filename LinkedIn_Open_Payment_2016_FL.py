@@ -69,7 +69,6 @@ for offset in range(0, count, limit):
 	json = response.json()
 	
 	# Print the response to the console.
-
 	print(json)
 	
 	# Create a data frame from the json object.
@@ -77,15 +76,12 @@ for offset in range(0, count, limit):
 	
 	# Append the data frame to the big data frame.
 	dataFrames = dataFrames.append(dataFrame, ignore_index=True)
-	
 	print("Offset: " + str(offset))
 
 print("Number of rows in final data frame: " + str(len(dataFrames)))
 
 dataFrames.recipient_zip_code = dataFrames.recipient_zip_code.str[:5]  #Get rid of the extra 4 digits in the end
-
 dataFrames.to_csv('Your Directory\\FL_out.csv', sep=',')
-
 dataFrames.info()
 
 
